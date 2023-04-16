@@ -393,6 +393,7 @@ def main():
         prompt=prompt,
         user_input=user_input,
     )
+    print("Creating agent with prompt ", prompt)
     agent.start_interaction_loop()
 
 

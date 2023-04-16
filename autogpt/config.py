@@ -49,6 +49,12 @@ class Config(metaclass=Singleton):
         self.browse_summary_max_token = int(os.getenv("BROWSE_SUMMARY_MAX_TOKEN", 300))
 
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        
+        self.cognite_client_id = os.getenv("COGNITE_CLIENT_ID")
+        self.cognite_client_secret = os.getenv("COGNITE_CLIENT_SECRET")
+        self.cognite_project = os.getenv("COGNITE_PROJECT")
+        self.cognite_base_url = os.getenv("COGNITE_BASE_URL")
+
         self.temperature = float(os.getenv("TEMPERATURE", "1"))
         self.use_azure = os.getenv("USE_AZURE") == "True"
         self.execute_local_commands = (

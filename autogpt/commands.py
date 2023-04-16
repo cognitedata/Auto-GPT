@@ -19,7 +19,6 @@ from autogpt.memory import get_memory
 from autogpt.speak import say_text
 from autogpt.web import browse_website
 
-
 cfg = Config()
 
 
@@ -30,6 +29,17 @@ def is_valid_int(value) -> bool:
     except ValueError:
         return False
 
+def get_cognite_client():
+    import os
+    from cognite.client import CogniteClient, ClientConfig
+    from cognite.client.credentials import Token
+    token=os.environ['COGNITE_TOKEN']
+
+    def token_provider():
+        return token
+    cnf = ClientConfig(client_name="CoPilot", base_url="https://api.cognitedata.com", project="lervik-industries", credentials=Token(token_provider))
+    client = CogniteClient(cnf)
+    return client
 
 def get_command(response):
     """Parse the response and return the command name and arguments"""
@@ -86,8 +96,15 @@ def execute_command(command_name, arguments):
             return message_agent(arguments["key"], arguments["message"])
         elif command_name == "list_agents":
             return list_agents()
+        # elif command_name == "cognite":
+        #     return cognite()
         elif command_name == "delete_agent":
             return delete_agent(arguments["key"])
+        elif command_name == "query_data_model":
+            print(arguments.keys())
+            return query_data_model(arguments["query"])
+        elif command_name == "fetch_data_model_schema":
+            return fetch_data_model_schema()
         elif command_name == "get_text_summary":
             return get_text_summary(arguments["url"], arguments["question"])
         elif command_name == "get_hyperlinks":
@@ -140,6 +157,37 @@ def execute_command(command_name, arguments):
     except Exception as e:
         return "Error: " + str(e)
 
+def fetch_data_model_schema():
+    client = get_cognite_client()
+    response = client.post("/api/v1/projects/lervik-industries/dml/graphql", json={
+        "query": "\n    query getDataModelVersionsById($space:String!, $externalId:String!) {\n      graphQlDmlVersionsById(space: $space, externalId: $externalId) {\n        items {\n          \n  space\n  externalId\n  version\n  name\n  description\n  graphQlDml\n  createdTime\n  lastUpdatedTime\n  \n        }\n      }\n    }\n    ",
+        "variables": {
+            "space": "DEMO_APM_SourceData",
+            "externalId": "DEMO_APM_SourceData"
+        }
+    })
+    data_model_schema = list(filter(lambda x: x["version"] == "14", response.json()["data"]["graphQlDmlVersionsById"]["items"]))[0]["graphQlDml"]
+
+    return {"data_model_schema": data_model_schema}
+
+def query_data_model(query):
+    client = get_cognite_client()
+    response = client.post("/api/v1/projects/lervik-industries/userapis/spaces/DEMO_APM_SourceData/datamodels/DEMO_APM_SourceData/versions/15/graphql", json={
+    "query": query,
+    "variables": {}
+    })
+    return response.json()
+
+# def cognite(query, num_results=8):
+#     """Return the results of a google search"""
+#     search_results = []
+#     if not query:
+#         return json.dumps(search_results)
+
+#     for j in ddg(query, max_results=num_results):
+#         search_results.append(j)
+
+#     return json.dumps(search_results, ensure_ascii=False, indent=4)
 
 def get_datetime():
     """Return the current date and time"""

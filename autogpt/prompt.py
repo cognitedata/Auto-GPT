@@ -26,15 +26,32 @@ def get_prompt() -> str:
     prompt_generator.add_constraint(
         'Exclusively use the commands listed in double quotes e.g. "command name"'
     )
+    prompt_generator.add_constraint(
+        """All GraphQL operations are in singular, not plural, following the data model schema. That means listMovie and not listMovies. 
+Date filters follow ISO8601 date format. For example, 2020-01-01T00:00:00.000Z. You should normally list all relevant properties when doing queries to have all information available. 
+Here is an example query including filters and sorting. Filter and sort should not normally be used. Only include properties specified in the data model type in the query.
+query {
+  listPump(first: 50, filter: {and: [{dryWeight: {gt: 100}}, {areaCode: {eq: "ABC"}}]} sort: {tagName: ASC}) {
+    items {
+      externalId
+      areaCode
+      plantCode
+      tagName
+      dryWeight
+    }
+  }
+}
+"""
+    )
 
     # Define the command list
     commands = [
-        ("Google Search", "google", {"input": "<search>"}),
-        (
-            "Browse Website",
-            "browse_website",
-            {"url": "<url>", "question": "<what_you_want_to_find_on_website>"},
-        ),
+        # ("Google Search", "google", {"input": "<search>"}),
+        # (
+        #     "Browse Website",
+        #     "browse_website",
+        #     {"url": "<url>", "question": "<what_you_want_to_find_on_website>"},
+        # ),
         (
             "Start GPT Agent",
             "start_agent",
@@ -52,25 +69,28 @@ def get_prompt() -> str:
         ("Append to file", "append_to_file", {"file": "<file>", "text": "<text>"}),
         ("Delete file", "delete_file", {"file": "<file>"}),
         ("Search Files", "search_files", {"directory": "<directory>"}),
-        ("Evaluate Code", "evaluate_code", {"code": "<full_code_string>"}),
-        (
-            "Get Improved Code",
-            "improve_code",
-            {"suggestions": "<list_of_suggestions>", "code": "<full_code_string>"},
-        ),
-        (
-            "Write Tests",
-            "write_tests",
-            {"code": "<full_code_string>", "focus": "<list_of_focus_areas>"},
-        ),
-        ("Execute Python File", "execute_python_file", {"file": "<file>"}),
-        (
-            "Execute Shell Command, non-interactive commands only",
-            "execute_shell",
-            {"command_line": "<command_line>"},
-        ),
+        # ("Evaluate Code", "evaluate_code", {"code": "<full_code_string>"}),
+        # (
+        #     "Get Improved Code",
+        #     "improve_code",
+        #     {"suggestions": "<list_of_suggestions>", "code": "<full_code_string>"},
+        # ),
+        # (
+        #     "Write Tests",
+        #     "write_tests",
+        #     {"code": "<full_code_string>", "focus": "<list_of_focus_areas>"},
+        # ),
+        # ("Execute Python File", "execute_python_file", {"file": "<file>"}),
+        # (
+        #     "Execute Shell Command, non-interactive commands only",
+        #     "execute_shell",
+        #     {"command_line": "<command_line>"},
+        # ),
         ("Task Complete (Shutdown)", "task_complete", {"reason": "<reason>"}),
-        ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
+        ("Fetch data model schema", "fetch_data_model_schema", {}),
+        ("Query GraphQl data model", "query_data_model", {"query": "<query>"}),
+
+        # ("Generate Image", "generate_image", {"prompt": "<prompt>"}),
         ("Do Nothing", "do_nothing", {}),
     ]
 
@@ -87,6 +107,7 @@ def get_prompt() -> str:
         "GPT-3.5 powered Agents for delegation of simple tasks."
     )
     prompt_generator.add_resource("File output.")
+    prompt_generator.add_resource("GraphQL query to Cognite Data Fusion (CDF).")
 
     # Add performance evaluations to the PromptGenerator object
     prompt_generator.add_performance_evaluation(
